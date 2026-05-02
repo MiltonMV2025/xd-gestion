@@ -1,0 +1,10 @@
+﻿---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { ProductionOrdersPage } from "@/features/production-orders/components/ProductionOrdersPage";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Órdenes de Producción | XD Gestión">
+  <ProductionOrdersPage client:load />
+</DashboardLayout>

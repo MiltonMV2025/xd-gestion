@@ -1,0 +1,10 @@
+﻿---
+import Layout from "@/layouts/Layout.astro";
+import { LoginPage } from "@/features/auth/components/LoginPage";
+
+export const prerender = false;
+---
+
+<Layout title="Login | XD Gestión">
+  <LoginPage client:load />
+</Layout>

@@ -1,46 +1,80 @@
-# Astro Starter Kit: Basics
+﻿# XD Gestión — Frontend Administrativo
 
-```sh
-npm create astro@latest -- --template basics
-```
+Prototipo funcional construido con **Astro + React + TypeScript** con enfoque en arquitectura modular, separación de responsabilidades y conexión preparada para Supabase.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Stack
 
-## 🚀 Project Structure
+- Astro
+- React
+- TypeScript
+- TailwindCSS
+- shadcn/ui
+- Supabase (`@supabase/supabase-js`)
+- PDF server-side (`pdf-lib`)
 
-Inside of your Astro project, you'll see the following folders and files:
+## Estructura
 
 ```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+src/
+  components/
+  layouts/
+  features/
+    auth/
+    clients/
+    companies/
+    dashboard/
+    orders/
+    production-orders/
+    quotes/
+    services/
+    users/
+  pages/
+  services/
+  hooks/
+  types/
+  utils/
+
+db/
+  migrations/
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Variables de entorno
 
-## 🧞 Commands
+Crear `xd-gestion/.env` basado en `.env.example`:
 
-All commands are run from the root of the project, from a terminal:
+```env
+PUBLIC_SUPABASE_URL=...
+PUBLIC_SUPABASE_ANON_KEY=...
+```
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Módulos implementados
 
-## 👀 Want to learn more?
+- Login y sesión por cookie (`/api/auth/login`, `/api/auth/logout`, `/api/auth/session`)
+- Dashboard con métricas
+- Servicios (catálogo CRUD + precio base)
+- Empresas (CRUD + foto)
+- Clientes (CRUD + foto + empresa asociada)
+- Cotizaciones con múltiples servicios (N servicios por cotización)
+- Generación de PDF de cotización (`/api/quotes/pdf/[id]`)
+- Órdenes de producción
+- Pedidos (tracking por estado)
+- Usuarios (CRUD + avatar)
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Migración SQL nueva
+
+Ejecuta:
+
+- `db/migrations/20260502_services_quotes_pdf.sql`
+
+Esta migración agrega:
+
+- Tablas: `services`, `quote_items`
+- Funciones RPC: `get_services`, `create_service`, `update_service`, `delete_service`, `create_quote_with_items`, `get_quote_items`, `get_quote_pdf_payload`
+- Políticas RLS básicas para prototipo
+
+## Comandos
+
+```bash
+npm install
+npm run dev
+```

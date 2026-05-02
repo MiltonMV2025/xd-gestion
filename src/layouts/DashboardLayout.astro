@@ -1,0 +1,74 @@
+﻿---
+import Layout from "@/layouts/Layout.astro";
+import Logo from "@/assets/images/Logo.png";
+import { appNavigation, routeTitleMap, SESSION_COOKIE } from "@/utils/navigation";
+import { decodeSessionCookie } from "@/utils/sessionCookie";
+
+interface Props {
+  title?: string;
+}
+
+const { title = "XD Gestión" } = Astro.props;
+const pathname = Astro.url.pathname;
+const pageTitle = routeTitleMap[pathname] ?? "XD Gestión";
+const session = decodeSessionCookie(Astro.cookies.get(SESSION_COOKIE)?.value);
+---
+
+<Layout title={title}>
+  <div class="min-h-screen bg-background text-foreground lg:flex">
+    <aside class="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar p-4 lg:flex lg:flex-col">
+      <a href="/dashboard" class="mb-8 flex w-full justify-center">
+        <img src={Logo.src} alt="XD Gestión" class="h-14 w-auto" />
+      </a>
+
+      <nav class="space-y-2">
+        {
+          appNavigation.map((item) => {
+            const isActive = pathname.startsWith(item.href);
+            const Icon = item.icon;
+
+            return (
+              <a
+                href={item.href}
+                class={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition ${
+                  isActive
+                    ? "bg-primary/20 text-primary"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent"
+                }`}
+              >
+                <Icon className="size-4" />
+                {item.label}
+              </a>
+            );
+          })
+        }
+      </nav>
+
+      <div class="mt-auto space-y-3 border-t border-sidebar-border pt-4">
+        <div>
+          <p class="text-sm font-medium text-sidebar-foreground">{session?.user.name ?? "Usuario"}</p>
+          <p class="text-xs text-muted-foreground">{session?.user.role ?? "Invitado"}</p>
+        </div>
+        <a
+          href="/api/auth/logout"
+          class="inline-flex h-9 w-full items-center justify-center rounded-md border border-input bg-input/30 px-3 text-sm hover:bg-input/50"
+        >
+          Cerrar sesión
+        </a>
+      </div>
+    </aside>
+
+    <div class="flex min-h-screen flex-1 flex-col">
+      <header class="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+        <h1 class="text-lg font-semibold">{pageTitle}</h1>
+        <div class="text-right">
+          <p class="text-sm font-medium">{session?.user.name ?? "Usuario"}</p>
+          <p class="text-xs text-muted-foreground">{session?.user.email ?? "sin email"}</p>
+        </div>
+      </header>
+      <main class="flex-1 p-4 lg:p-6">
+        <slot />
+      </main>
+    </div>
+  </div>
+</Layout>

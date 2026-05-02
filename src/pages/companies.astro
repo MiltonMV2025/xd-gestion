@@ -1,0 +1,10 @@
+﻿---
+import { CompaniesPage } from "@/features/companies/components/CompaniesPage";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Empresas | XD Gestión">
+  <CompaniesPage client:load />
+</DashboardLayout>

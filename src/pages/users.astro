@@ -1,0 +1,10 @@
+﻿---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { UsersPage } from "@/features/users/components/UsersPage";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Usuarios | XD Gestión">
+  <UsersPage client:load />
+</DashboardLayout>
