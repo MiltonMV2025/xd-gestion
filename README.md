@@ -52,12 +52,9 @@ PUBLIC_SUPABASE_ANON_KEY=...
 - Login y sesión por cookie (`/api/auth/login`, `/api/auth/logout`, `/api/auth/session`)
 - Dashboard con métricas
 - Servicios (catálogo CRUD + precio base)
-- Empresas (CRUD + foto)
-- Clientes (CRUD + foto + empresa asociada)
-- Cotizaciones con múltiples servicios (N servicios por cotización)
-- Generación de PDF de cotización (`/api/quotes/pdf/[id]`)
-- Órdenes de producción
-- Pedidos (tracking por estado)
+- Organización unificada (Empresas + Sucursales + Clientes)
+- Expedientes (flujo unificado: cotización -> producción -> pedido)
+- Cotizaciones con múltiples servicios + PDF (`/api/quotes/pdf/[id]`) dentro del flujo de expedientes
 - Usuarios (CRUD + avatar)
 
 ## Migración SQL nueva
