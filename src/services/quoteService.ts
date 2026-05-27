@@ -9,6 +9,9 @@ interface QuoteRow {
   total: number | null;
   status: "pending" | "approved" | "rejected";
   created_at: string | null;
+  updated_at?: string | null;
+  created_by_name?: string | null;
+  updated_by_name?: string | null;
 }
 
 function mapQuote(row: QuoteRow): Quote {
@@ -19,6 +22,9 @@ function mapQuote(row: QuoteRow): Quote {
     total: Number(row.total ?? 0),
     status: row.status,
     createdAt: row.created_at ?? "",
+    updatedAt: row.updated_at ?? "",
+    createdByName: row.created_by_name ?? undefined,
+    updatedByName: row.updated_by_name ?? undefined,
   };
 }
 
@@ -40,6 +46,7 @@ export async function createQuoteWithItemsRpc(input: {
   p_client_id: string;
   p_description: string;
   p_items: Array<{ service_id: string; quantity: number; unit_price?: number | null }>;
+  p_actor_user_id?: string | null;
 }): Promise<ApiResult<string>> {
   const { data, error } = await supabase.rpc("create_quote_with_items", input);
 
@@ -53,6 +60,7 @@ export async function createQuoteWithItemsRpc(input: {
 export async function updateQuoteStatusRpc(input: {
   p_id: string;
   p_status: "pending" | "approved" | "rejected";
+  p_actor_user_id?: string | null;
 }): Promise<ApiResult<boolean>> {
   const { error } = await supabase.rpc("update_quote_status", input);
 
@@ -65,9 +73,11 @@ export async function updateQuoteStatusRpc(input: {
 
 export async function approveQuoteAndCreateProductionOrder(
   quoteId: string,
+  actorUserId?: string | null,
 ): Promise<ApiResult<string>> {
   const { data, error } = await supabase.rpc("approve_quote_and_create_production_order", {
     p_quote_id: quoteId,
+    p_actor_user_id: actorUserId ?? null,
   });
 
   if (error) return { data: null, error: error.message };
@@ -91,9 +101,13 @@ export async function deleteQuote(quoteId: string): Promise<ApiResult<boolean>> 
   return { data: true, error: null };
 }
 
-export async function createProductionOrderFromQuote(quoteId: string): Promise<ApiResult<string>> {
+export async function createProductionOrderFromQuote(
+  quoteId: string,
+  actorUserId?: string | null,
+): Promise<ApiResult<string>> {
   const { data, error } = await supabase.rpc("create_production_order_from_quote", {
     p_quote_id: quoteId,
+    p_actor_user_id: actorUserId ?? null,
   });
 
   if (error) return { data: null, error: error.message };

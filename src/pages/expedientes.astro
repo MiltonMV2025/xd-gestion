@@ -1,0 +1,10 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { ExpedientesApp } from "@/features/expedientes/components/ExpedientesApp";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Expedientes | XD Gestión">
+  <ExpedientesApp client:load />
+</DashboardLayout>

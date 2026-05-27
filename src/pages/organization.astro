@@ -1,0 +1,10 @@
+---
+import { OrganizationPage } from "@/features/organization/components/OrganizationPage";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Organización | XD Gestión">
+  <OrganizationPage client:load />
+</DashboardLayout>

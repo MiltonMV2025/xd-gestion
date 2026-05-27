@@ -7,13 +7,19 @@ interface ProductionOrderRow {
   quote_id: string | null;
   status: ProductionOrderStatus;
   created_at: string | null;
+  updated_at?: string | null;
+  created_by_name?: string | null;
+  updated_by_name?: string | null;
 }
 
 interface OrderRow {
   id: string;
   production_order_id: string | null;
   status: OrderStatus;
+  created_at?: string | null;
   updated_at: string | null;
+  created_by_name?: string | null;
+  updated_by_name?: string | null;
 }
 
 export async function listProductionOrders(): Promise<ApiResult<ProductionOrder[]>> {
@@ -26,6 +32,10 @@ export async function listProductionOrders(): Promise<ApiResult<ProductionOrder[
     clientName: "—",
     status: row.status,
     estimatedDelivery: row.created_at?.slice(0, 10) ?? "",
+    createdAt: row.created_at ?? "",
+    updatedAt: row.updated_at ?? "",
+    createdByName: row.created_by_name ?? undefined,
+    updatedByName: row.updated_by_name ?? undefined,
   }));
 
   return { data: rows, error: null };
@@ -34,10 +44,12 @@ export async function listProductionOrders(): Promise<ApiResult<ProductionOrder[
 export async function updateProductionOrderStatus(
   id: string,
   status: ProductionOrderStatus,
+  actorUserId?: string | null,
 ): Promise<ApiResult<boolean>> {
   const { error } = await supabase.rpc("update_production_order_status", {
     p_id: id,
     p_status: status,
+    p_actor_user_id: actorUserId ?? null,
   });
   if (error) return { data: null, error: error.message };
   return { data: true, error: null };
@@ -51,7 +63,10 @@ export async function listOrders(): Promise<ApiResult<Order[]>> {
     id: row.id,
     clientName: row.production_order_id ?? "—",
     status: row.status,
+    createdAt: row.created_at ?? "",
     updatedAt: row.updated_at?.slice(0, 10) ?? "",
+    createdByName: row.created_by_name ?? undefined,
+    updatedByName: row.updated_by_name ?? undefined,
   }));
 
   return { data: rows, error: null };
@@ -59,18 +74,25 @@ export async function listOrders(): Promise<ApiResult<Order[]>> {
 
 export async function createOrderFromProductionOrder(
   productionOrderId: string,
+  actorUserId?: string | null,
 ): Promise<ApiResult<string>> {
   const { data, error } = await supabase.rpc("create_order_from_production_order", {
     p_production_order_id: productionOrderId,
+    p_actor_user_id: actorUserId ?? null,
   });
   if (error) return { data: null, error: error.message };
   return { data: String(data ?? ""), error: null };
 }
 
-export async function updateOrderStatus(id: string, status: OrderStatus): Promise<ApiResult<boolean>> {
+export async function updateOrderStatus(
+  id: string,
+  status: OrderStatus,
+  actorUserId?: string | null,
+): Promise<ApiResult<boolean>> {
   const { error } = await supabase.rpc("update_order_status", {
     p_id: id,
     p_status: status,
+    p_actor_user_id: actorUserId ?? null,
   });
   if (error) return { data: null, error: error.message };
   return { data: true, error: null };

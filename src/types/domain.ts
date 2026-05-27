@@ -13,9 +13,11 @@ export interface Client {
   email: string;
   address: string;
   companyId: string | null;
+  branchId: string | null;
   position: string;
   photoUrl: string;
   companyName?: string;
+  branchName?: string;
   createdAt: string;
 }
 
@@ -28,6 +30,9 @@ export interface Quote {
   total: number;
   status: QuoteStatus;
   createdAt: string;
+  updatedAt?: string;
+  createdByName?: string;
+  updatedByName?: string;
 }
 
 export interface QuoteItem {
@@ -48,6 +53,10 @@ export interface ProductionOrder {
   clientName: string;
   status: ProductionOrderStatus;
   estimatedDelivery: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdByName?: string;
+  updatedByName?: string;
 }
 
 export type OrderStatus = "in_progress" | "finished" | "delivered";
@@ -57,6 +66,9 @@ export interface Order {
   clientName: string;
   status: OrderStatus;
   updatedAt: string;
+  createdAt?: string;
+  createdByName?: string;
+  updatedByName?: string;
 }
 
 export interface UserItem {
@@ -92,6 +104,17 @@ export interface CompanyItem {
   createdAt: string;
 }
 
+export interface CompanyBranchItem {
+  id: string;
+  companyId: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  active: boolean;
+  createdAt: string;
+}
+
 export interface ServiceCatalogItem {
   id: string;
   name: string;
@@ -105,4 +128,60 @@ export interface QuoteFlowItem {
   quoteId: string;
   productionOrderId: string | null;
   orderId: string | null;
+}
+
+export type ExpedienteStage =
+  | "quote_pending"
+  | "quote_approved"
+  | "production_pending"
+  | "production_in_progress"
+  | "production_completed"
+  | "order_in_progress"
+  | "order_finished"
+  | "order_delivered";
+
+export type ExpedienteAction =
+  | "approve_quote"
+  | "start_production"
+  | "complete_production"
+  | "create_order"
+  | "finish_order"
+  | "deliver_order";
+
+export interface Expediente {
+  id: string;
+  quoteId: string;
+  clientId: string;
+  clientName: string;
+  total: number;
+  stage: ExpedienteStage;
+  updatedAt: string;
+  responsible: string;
+  productionOrderId: string | null;
+  orderId: string | null;
+}
+
+export interface ExpedienteDetail {
+  expediente: Expediente;
+  quoteDescription: string;
+  quoteCreatedAt: string;
+  quoteStatus: QuoteStatus;
+  quoteCreatedByName?: string;
+  quoteUpdatedByName?: string;
+  productionStatus: ProductionOrderStatus | null;
+  productionCreatedByName?: string;
+  productionUpdatedByName?: string;
+  orderStatus: OrderStatus | null;
+  orderCreatedByName?: string;
+  orderUpdatedByName?: string;
+  items: QuoteItem[];
+}
+
+export interface ExpedienteTimelineEvent {
+  id: string;
+  stage: ExpedienteStage;
+  title: string;
+  detail: string;
+  happenedAt: string;
+  responsible: string;
 }

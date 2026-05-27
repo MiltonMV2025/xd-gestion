@@ -9,6 +9,8 @@ interface ClientRow {
   email: string | null;
   address: string | null;
   company_id: string | null;
+  branch_id: string | null;
+  branch_name: string | null;
   position: string | null;
   photo_url: string | null;
   created_at: string | null;
@@ -23,9 +25,11 @@ function mapClient(row: ClientRow, companiesById: Map<string, CompanyItem>): Cli
     email: row.email ?? "",
     address: row.address ?? "",
     companyId: row.company_id,
+    branchId: row.branch_id,
     position: row.position ?? "",
     photoUrl: row.photo_url ?? "",
     companyName: company?.name,
+    branchName: row.branch_name ?? "",
     createdAt: row.created_at ?? "",
   };
 }
@@ -45,6 +49,7 @@ export async function createClient(input: {
   email?: string;
   address?: string;
   companyId?: string | null;
+  branchId?: string | null;
   position?: string;
   photoUrl?: string;
 }): Promise<ApiResult<string>> {
@@ -54,6 +59,7 @@ export async function createClient(input: {
     p_email: input.email ?? "",
     p_address: input.address ?? "",
     p_company_id: input.companyId ?? null,
+    p_branch_id: input.branchId ?? null,
     p_position: input.position ?? "",
     p_photo_url: input.photoUrl ?? "",
   });
@@ -70,6 +76,7 @@ export async function updateClient(
     email?: string;
     address?: string;
     companyId?: string | null;
+    branchId?: string | null;
     position?: string;
     photoUrl?: string;
   },
@@ -81,6 +88,7 @@ export async function updateClient(
     p_email: input.email ?? "",
     p_address: input.address ?? "",
     p_company_id: input.companyId ?? null,
+    p_branch_id: input.branchId ?? null,
     p_position: input.position ?? "",
     p_photo_url: input.photoUrl ?? "",
   });
