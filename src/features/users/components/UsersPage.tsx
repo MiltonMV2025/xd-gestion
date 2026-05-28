@@ -1,4 +1,4 @@
-﻿import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+﻿import { Pencil, Plus, Trash2, Upload, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BulkUsersModal } from "@/features/users/components/BulkUsersModal";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { getDepartments, getRoles } from "@/services/catalogService";
 import {
@@ -48,6 +49,7 @@ export function UsersPage() {
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [departments, setDepartments] = useState<DepartmentItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [form, setForm] = useState<UserFormState>(emptyForm);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -231,10 +233,27 @@ export function UsersPage() {
         title="Usuarios"
         subtitle="Gestión de usuarios conectada a RPC y catálogos de roles/departamentos."
         action={
-          <Button onClick={openCreateModal}>
-            <Plus className="mr-1 size-4" /> Nuevo usuario
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setBulkOpen(true)} disabled={isBootstrapping}>
+              <Users className="mr-1 size-4" /> Carga en bloque
+            </Button>
+            <Button onClick={openCreateModal}>
+              <Plus className="mr-1 size-4" /> Nuevo usuario
+            </Button>
+          </div>
         }
+      />
+
+      <BulkUsersModal
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onSuccess={() => {
+          void refreshUsers().catch(() => {
+            /* refresh errors are surfaced via the page-level bootstrap state already */
+          });
+        }}
+        roles={roleOptions}
+        departments={departments}
       />
 
       {isBootstrapping && <p className="mb-3 text-sm text-muted-foreground">Cargando catálogos...</p>}

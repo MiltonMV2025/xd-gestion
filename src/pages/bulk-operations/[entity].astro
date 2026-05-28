@@ -1,0 +1,29 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { BulkImportWizardApp } from "@/features/bulk-operations/components/BulkImportWizardApp";
+
+export const prerender = false;
+
+const VALID_ENTITIES = ["empresas", "sucursales", "clientes"] as const;
+type ValidEntity = (typeof VALID_ENTITIES)[number];
+
+const rawEntity = Astro.params.entity;
+const entity = VALID_ENTITIES.includes(rawEntity as ValidEntity)
+  ? (rawEntity as ValidEntity)
+  : null;
+
+if (!entity) {
+  return Astro.redirect("/bulk-operations");
+}
+
+const TITLES: Record<ValidEntity, string> = {
+  empresas: "Empresas",
+  sucursales: "Sucursales",
+  clientes: "Clientes",
+};
+const heading = `Carga masiva: ${TITLES[entity]}`;
+---
+
+<DashboardLayout title={`${heading} | XD Gestión`} pageHeading={heading}>
+  <BulkImportWizardApp entity={entity} client:load />
+</DashboardLayout>
