@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Plus } from "lucide-react";
+﻿import { ArrowRightLeft, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -19,6 +19,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { getCompanyBranches } from "@/services/companyBranchService";
+import { getCompanies } from "@/services/companyService";
 import { getServices } from "@/services/serviceCatalogService";
 import {
   advanceExpedienteStage,
@@ -31,6 +33,8 @@ import { listClients } from "@/services/clientService";
 import { createQuoteWithItemsRpc } from "@/services/quoteService";
 import type {
   Client,
+  CompanyBranchItem,
+  CompanyItem,
   Expediente,
   ExpedienteAction,
   ExpedienteDetail,
@@ -86,6 +90,8 @@ export function ExpedientesPage() {
   const [detail, setDetail] = useState<ExpedienteDetail | null>(null);
   const [timeline, setTimeline] = useState<ExpedienteTimelineEvent[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  const [draftBranches, setDraftBranches] = useState<CompanyBranchItem[]>([]);
   const [services, setServices] = useState<ServiceCatalogItem[]>([]);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
@@ -93,6 +99,11 @@ export function ExpedientesPage() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<ExpedienteAction | null>(null);
   const [draftClientId, setDraftClientId] = useState("");
+  const [draftCompanyId, setDraftCompanyId] = useState("");
+  const [draftBranchId, setDraftBranchId] = useState("");
+  const [draftCompanySearch, setDraftCompanySearch] = useState("");
+  const [draftBranchSearch, setDraftBranchSearch] = useState("");
+  const [draftClientSearch, setDraftClientSearch] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
   const [draftLines, setDraftLines] = useState<DraftLine[]>([]);
   const [expedientesPage, setExpedientesPage] = useState(1);
@@ -126,6 +137,19 @@ export function ExpedientesPage() {
     setTimeline(timelineResult.data ?? []);
   }
 
+  async function refreshDraftBranches(companyId: string, preferredBranchId?: string) {
+    const response = await getCompanyBranches(companyId);
+    if (response.error) throw new Error(response.error);
+    const rows = response.data ?? [];
+    setDraftBranches(rows);
+
+    setDraftBranchId((current) => {
+      const preferred = preferredBranchId ?? current;
+      if (preferred && rows.some((branch) => branch.id === preferred)) return preferred;
+      return rows[0]?.id ?? "";
+    });
+  }
+
   useEffect(() => {
     let mounted = true;
 
@@ -134,16 +158,18 @@ export function ExpedientesPage() {
       setBootstrapError(null);
       clearError();
 
-      const [clientsResult, servicesResult] = await Promise.all([listClients(), getServices()]);
+      const [clientsResult, servicesResult, companiesResult] = await Promise.all([
+        listClients(),
+        getServices(),
+        getCompanies(),
+      ]);
 
       if (!mounted) return;
 
       if (clientsResult.error) {
         setBootstrapError(readErrorMessage(clientsResult.error, "No se pudieron cargar clientes"));
       } else {
-        const rows = clientsResult.data ?? [];
-        setClients(rows);
-        setDraftClientId(rows[0]?.id ?? "");
+        setClients(clientsResult.data ?? []);
       }
 
       if (servicesResult.error) {
@@ -154,6 +180,35 @@ export function ExpedientesPage() {
         const rows = servicesResult.data ?? [];
         setServices(rows);
         setDraftLines([createLine(rows[0])]);
+      }
+
+      if (companiesResult.error) {
+        setBootstrapError((current) =>
+          current
+            ? `${current} | ${companiesResult.error}`
+            : readErrorMessage(companiesResult.error, "No se pudieron cargar empresas"),
+        );
+      } else {
+        const companyRows = companiesResult.data ?? [];
+        setCompanies(companyRows);
+
+        const firstClientWithHierarchy = (clientsResult.data ?? []).find(
+          (client) => client.companyId && client.branchId,
+        );
+        const initialCompanyId = firstClientWithHierarchy?.companyId ?? companyRows[0]?.id ?? "";
+        setDraftCompanyId(initialCompanyId);
+
+        if (initialCompanyId) {
+          try {
+            await refreshDraftBranches(initialCompanyId, firstClientWithHierarchy?.branchId ?? undefined);
+          } catch (branchIssue) {
+            const branchMessage =
+              branchIssue instanceof Error ? branchIssue.message : "No se pudieron cargar sucursales";
+            setBootstrapError((current) => (current ? `${current} | ${branchMessage}` : branchMessage));
+          }
+        }
+
+        setDraftClientId(firstClientWithHierarchy?.id ?? "");
       }
 
       try {
@@ -208,6 +263,34 @@ export function ExpedientesPage() {
     1,
     Math.ceil((detail?.items.length ?? 0) / DETAIL_ITEMS_PAGE_SIZE),
   );
+  const draftCompanyOptions = useMemo(() => companies, [companies]);
+  const draftBranchOptions = useMemo(() => draftBranches, [draftBranches]);
+  const filteredCompanyOptions = useMemo(() => {
+    const normalized = draftCompanySearch.trim().toLowerCase();
+    if (!normalized) return draftCompanyOptions;
+    return draftCompanyOptions.filter((company) => company.name.toLowerCase().includes(normalized));
+  }, [draftCompanyOptions, draftCompanySearch]);
+  const filteredBranchOptions = useMemo(() => {
+    const normalized = draftBranchSearch.trim().toLowerCase();
+    if (!normalized) return draftBranchOptions;
+    return draftBranchOptions.filter((branch) => branch.name.toLowerCase().includes(normalized));
+  }, [draftBranchOptions, draftBranchSearch]);
+  const filteredDraftClients = useMemo(() => {
+    const normalizedSearch = draftClientSearch.trim().toLowerCase();
+
+    return clients.filter((client) => {
+      if (!client.companyId || !client.branchId) return false;
+      if (draftCompanyId && client.companyId !== draftCompanyId) return false;
+      if (draftBranchId && client.branchId !== draftBranchId) return false;
+      if (!normalizedSearch) return true;
+
+      return (
+        client.name.toLowerCase().includes(normalizedSearch) ||
+        (client.email ?? "").toLowerCase().includes(normalizedSearch) ||
+        (client.position ?? "").toLowerCase().includes(normalizedSearch)
+      );
+    });
+  }, [clients, draftBranchId, draftClientSearch, draftCompanyId]);
   const paginatedDetailItems = useMemo(
     () =>
       (detail?.items ?? []).slice(
@@ -229,9 +312,34 @@ export function ExpedientesPage() {
     }
   }, [detailItemsPage, detailItemsTotalPages]);
 
+  useEffect(() => {
+    if (!showCreateModal) return;
+
+    setDraftClientId((current) =>
+      filteredDraftClients.some((client) => client.id === current)
+        ? current
+        : filteredDraftClients[0]?.id ?? "",
+    );
+  }, [filteredDraftClients, showCreateModal]);
+
+  useEffect(() => {
+    if (!showCreateModal || !draftCompanyId) return;
+
+    void execute(async () => {
+      await refreshDraftBranches(draftCompanyId);
+      return true;
+    });
+  }, [draftCompanyId, showCreateModal]);
+
   function closeCreateModal() {
     setShowCreateModal(false);
-    setDraftClientId(clients[0]?.id ?? "");
+    const firstClient = clients.find((client) => client.companyId && client.branchId);
+    setDraftCompanyId(firstClient?.companyId ?? "");
+    setDraftBranchId(firstClient?.branchId ?? "");
+    setDraftCompanySearch("");
+    setDraftBranchSearch("");
+    setDraftClientSearch("");
+    setDraftClientId(firstClient?.id ?? "");
     setDraftDescription("");
     setDraftLines([createLine(services[0])]);
     clearError();
@@ -265,7 +373,7 @@ export function ExpedientesPage() {
     event.preventDefault();
     clearError();
 
-    if (!draftClientId || draftLines.length === 0) return;
+    if (!draftCompanyId || !draftBranchId || !draftClientId || draftLines.length === 0) return;
 
     const normalizedItems = draftLines
       .filter((line) => line.serviceId && line.quantity > 0)
@@ -506,16 +614,98 @@ export function ExpedientesPage() {
 
       <Modal open={showCreateModal} onClose={closeCreateModal} title="Nuevo expediente">
         <form className="space-y-4" onSubmit={handleCreateExpediente}>
-          <div className="space-y-2">
-            <Select value={draftClientId} onChange={(event) => setDraftClientId(event.target.value)} required>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </Select>
+          <div className="space-y-3">
+            <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Empresa</p>
+              <Input
+                placeholder="Buscar empresa"
+                value={draftCompanySearch}
+                onChange={(event) => setDraftCompanySearch(event.target.value)}
+              />
+              <div className="max-h-28 space-y-1 overflow-y-auto">
+                {filteredCompanyOptions.map((company) => (
+                  <button
+                    key={company.id}
+                    type="button"
+                    className={`w-full rounded-md border px-2 py-1.5 text-left text-sm transition ${
+                      draftCompanyId === company.id
+                        ? "border-primary bg-primary/15 text-foreground"
+                        : "border-border/70 hover:border-primary/40 hover:bg-muted/40"
+                    }`}
+                    onClick={() => {
+                      setDraftCompanyId(company.id);
+                      setDraftBranchId("");
+                      setDraftClientId("");
+                    }}
+                  >
+                    {company.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sucursal</p>
+              <Input
+                placeholder="Buscar sucursal"
+                value={draftBranchSearch}
+                onChange={(event) => setDraftBranchSearch(event.target.value)}
+                disabled={!draftCompanyId}
+              />
+              <div className="max-h-28 space-y-1 overflow-y-auto">
+                {filteredBranchOptions.map((branch) => (
+                  <button
+                    key={branch.id}
+                    type="button"
+                    className={`w-full rounded-md border px-2 py-1.5 text-left text-sm transition ${
+                      draftBranchId === branch.id
+                        ? "border-primary bg-primary/15 text-foreground"
+                        : "border-border/70 hover:border-primary/40 hover:bg-muted/40"
+                    }`}
+                    onClick={() => {
+                      setDraftBranchId(branch.id);
+                      setDraftClientId("");
+                    }}
+                  >
+                    {branch.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-lg border border-border/70 bg-muted/20 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Empleado</p>
+              <Input
+                placeholder="Buscar empleado por nombre, correo o cargo"
+                value={draftClientSearch}
+                onChange={(event) => setDraftClientSearch(event.target.value)}
+                disabled={!draftBranchId}
+              />
+              <div className="max-h-32 space-y-1 overflow-y-auto">
+                {filteredDraftClients.map((client) => (
+                  <button
+                    key={client.id}
+                    type="button"
+                    className={`w-full rounded-md border px-2 py-1.5 text-left text-sm transition ${
+                      draftClientId === client.id
+                        ? "border-primary bg-primary/15 text-foreground"
+                        : "border-border/70 hover:border-primary/40 hover:bg-muted/40"
+                    }`}
+                    onClick={() => setDraftClientId(client.id)}
+                  >
+                    {client.name} · {client.position || "Sin cargo"}
+                  </button>
+                ))}
+              </div>
+              {draftBranchId && filteredDraftClients.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No hay empleados para esta sucursal con el filtro actual.
+                </p>
+              )}
+            </div>
+
             <Textarea
-              placeholder="Descripción de la cotización"
+              placeholder="Descripción comercial del trabajo a cotizar"
               value={draftDescription}
               onChange={(event) => setDraftDescription(event.target.value)}
             />

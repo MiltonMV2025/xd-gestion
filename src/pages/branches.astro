@@ -1,0 +1,10 @@
+---
+import { BranchesPage } from "@/features/branches/components/BranchesPage";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Sucursales | XD Gestión">
+  <BranchesPage client:load />
+</DashboardLayout>

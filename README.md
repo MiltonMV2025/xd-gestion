@@ -52,7 +52,8 @@ PUBLIC_SUPABASE_ANON_KEY=...
 - Login y sesión por cookie (`/api/auth/login`, `/api/auth/logout`, `/api/auth/session`)
 - Dashboard con métricas
 - Servicios (catálogo CRUD + precio base)
-- Organización unificada (Empresas + Sucursales + Clientes)
+- Empresas (pantalla dedicada CRUD)
+- Sucursales (pantalla dedicada CRUD + clientes anidados por sucursal)
 - Expedientes (flujo unificado: cotización -> producción -> pedido)
 - Cotizaciones con múltiples servicios + PDF (`/api/quotes/pdf/[id]`) dentro del flujo de expedientes
 - Usuarios (CRUD + avatar)
@@ -62,6 +63,9 @@ PUBLIC_SUPABASE_ANON_KEY=...
 Ejecuta:
 
 - `db/migrations/20260502_services_quotes_pdf.sql`
+- `db/migrations/20260527_organization_branches.sql`
+- `db/migrations/20260528_organization_employees_guardrails.sql`
+- `db/migrations/20260528_cleanup_and_seed_organization.sql` (opcional para limpiar y regenerar datos demo)
 
 Esta migración agrega:
 
