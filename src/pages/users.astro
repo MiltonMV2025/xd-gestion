@@ -1,10 +1,10 @@
-﻿---
+---
 import DashboardLayout from "@/layouts/DashboardLayout.astro";
-import { UsersPage } from "@/features/users/components/UsersPage";
+import { UsersApp } from "@/features/users/components/UsersApp";
 
 export const prerender = false;
 ---
 
 <DashboardLayout title="Usuarios | XD Gestión">
-  <UsersPage client:load />
+  <UsersApp client:load />
 </DashboardLayout>

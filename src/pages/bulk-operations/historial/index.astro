@@ -1,0 +1,10 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { BulkUploadLogApp } from "@/features/bulk-operations/components/BulkUploadLogApp";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Historial de cargas | XD Gestión">
+  <BulkUploadLogApp client:load />
+</DashboardLayout>

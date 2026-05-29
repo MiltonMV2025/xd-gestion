@@ -8,9 +8,15 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  size?: "default" | "lg";
 }
 
-export function Modal({ title, open, onClose, children }: ModalProps) {
+const SIZE_CLASS: Record<NonNullable<ModalProps["size"]>, string> = {
+  default: "max-w-2xl",
+  lg: "max-w-4xl",
+};
+
+export function Modal({ title, open, onClose, children, size = "default" }: ModalProps) {
   useEffect(() => {
     if (!open) return;
 
@@ -32,7 +38,7 @@ export function Modal({ title, open, onClose, children }: ModalProps) {
       onMouseDown={onClose}
     >
       <div
-        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-2xl"
+        className={`w-full ${SIZE_CLASS[size]} overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-2xl`}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border/70 px-6 py-4">

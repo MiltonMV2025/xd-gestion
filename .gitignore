@@ -1,8 +1,12 @@
 # build output
 dist/
+.vercel/
 
 # generated types
 .astro/
+
+# supabase CLI local state (project-ref, version cache, etc.)
+supabase/.temp/
 
 # dependencies
 node_modules/

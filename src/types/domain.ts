@@ -185,3 +185,75 @@ export interface ExpedienteTimelineEvent {
   happenedAt: string;
   responsible: string;
 }
+
+// Bulk operations: wire-format types match the JSON contract enforced by the
+// SQL RPCs (snake_case keys, exactly the columns each Excel template defines).
+
+export type BulkEntity = "empresas" | "sucursales" | "clientes" | "usuarios";
+
+export interface BulkRowResult {
+  rowIndex: number;
+  status: "ok" | "error";
+  id: string | null;
+  error: string | null;
+}
+
+export interface BulkOperationOutcome {
+  jobId: string;
+  totalRows: number;
+  successCount: number;
+  failureCount: number;
+  results: BulkRowResult[];
+}
+
+export interface BulkCompanyRow {
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  logo_url?: string;
+}
+
+export interface BulkBranchRow {
+  empresa: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  active?: boolean;
+}
+
+export interface BulkClientRow {
+  empresa?: string;
+  sucursal?: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  position?: string;
+  photo_url?: string;
+}
+
+export interface BulkUserRow {
+  name: string;
+  email: string;
+  password: string;
+  role_id: string;
+  department_id: string;
+}
+
+export interface BulkUploadJob {
+  id: string;
+  userId: string | null;
+  userName: string;
+  entity: BulkEntity;
+  fileName: string;
+  totalRows: number;
+  successCount: number;
+  failureCount: number;
+  createdAt: string;
+}
+
+export interface BulkUploadJobDetail extends BulkUploadJob {
+  results: BulkRowResult[];
+}

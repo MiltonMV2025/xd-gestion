@@ -1,0 +1,10 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { BulkOperationsHomeApp } from "@/features/bulk-operations/components/BulkOperationsHomeApp";
+
+export const prerender = false;
+---
+
+<DashboardLayout title="Operaciones en bloque | XD Gestión">
+  <BulkOperationsHomeApp client:load />
+</DashboardLayout>

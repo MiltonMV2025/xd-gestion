@@ -1,17 +1,19 @@
 ﻿---
 import Layout from "@/layouts/Layout.astro";
 import Logo from "@/assets/images/logo.png";
-import { appNavigation, routeTitleMap, SESSION_COOKIE } from "@/utils/navigation";
+import { filterNavByRole, resolveRouteTitle, SESSION_COOKIE } from "@/utils/navigation";
 import { decodeSessionCookie } from "@/utils/sessionCookie";
 
 interface Props {
   title?: string;
+  pageHeading?: string;
 }
 
-const { title = "XD Gestión" } = Astro.props;
+const { title = "XD Gestión", pageHeading } = Astro.props;
 const pathname = Astro.url.pathname;
-const pageTitle = routeTitleMap[pathname] ?? "XD Gestión";
 const session = decodeSessionCookie(Astro.cookies.get(SESSION_COOKIE)?.value);
+const pageTitle = pageHeading ?? resolveRouteTitle(pathname);
+const visibleNav = filterNavByRole(session?.user.role);
 ---
 
 <Layout title={title}>
@@ -23,7 +25,7 @@ const session = decodeSessionCookie(Astro.cookies.get(SESSION_COOKIE)?.value);
 
       <nav class="space-y-2">
         {
-          appNavigation.map((item) => {
+          visibleNav.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
 

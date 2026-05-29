@@ -1,6 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
 
-import { protectedPrefixes, SESSION_COOKIE } from "@/utils/navigation";
+import { adminOnlyPrefixes, protectedPrefixes, SESSION_COOKIE } from "@/utils/navigation";
 import { decodeSessionCookie } from "@/utils/sessionCookie";
 
 const publicPaths = ["/login"];
@@ -24,6 +24,11 @@ export const onRequest = defineMiddleware((context, next) => {
 
   if (isProtected && !hasSession) {
     return context.redirect("/login");
+  }
+
+  const isAdminOnly = adminOnlyPrefixes.some((prefix) => pathname.startsWith(prefix));
+  if (isAdminOnly && session && session.user.role !== "admin") {
+    return context.redirect("/dashboard");
   }
 
   return next();

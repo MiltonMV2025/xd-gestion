@@ -1,0 +1,15 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { BulkUploadJobDetailApp } from "@/features/bulk-operations/components/BulkUploadJobDetailApp";
+
+export const prerender = false;
+
+const jobId = Astro.params.id;
+if (!jobId) {
+  return Astro.redirect("/bulk-operations/historial");
+}
+---
+
+<DashboardLayout title="Detalle de carga | XD Gestión" pageHeading="Detalle de carga">
+  <BulkUploadJobDetailApp jobId={jobId} client:load />
+</DashboardLayout>
